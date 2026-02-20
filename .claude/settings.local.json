@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node -e:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npx vite:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python:*)",
+      "mcp__web-search-prime__webSearchPrime",
+      "WebSearch",
+      "mcp__web-reader__webReader"
+    ]
+  }
+}

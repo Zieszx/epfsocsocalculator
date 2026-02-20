@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/epfsocsoCalc/',
+  base: '/epfsocsocalculator/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,8 +18,8 @@ export default defineConfig({
         theme_color: '#1e40af',
         background_color: '#f8fafc',
         display: 'standalone',
-        scope: '/epfsocsoCalc/',
-        start_url: '/epfsocsoCalc/',
+        scope: '/epfsocsocalculator/',
+        start_url: '/epfsocsocalculator/',
         icons: [
           {
             src: 'pwa-192x192.png',

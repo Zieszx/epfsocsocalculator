@@ -15,6 +15,7 @@ import TabPanel from './components/TabPanel'
 import YearlySummary from './components/YearlySummary'
 import SalaryComparison from './components/SalaryComparison'
 import BonusCalculator from './components/BonusCalculator'
+import RateTable from './components/RateTable'
 
 const STORAGE_KEY = 'mySalaryCalcData'
 
@@ -203,6 +204,11 @@ function App() {
         {/* ── Bonus/OT Tab ── */}
         {salaryNum > 0 && activeTab === 'bonus' && (
           <BonusCalculator age={age} />
+        )}
+
+        {/* ── Rate Tables Tab ── */}
+        {salaryNum > 0 && activeTab === 'rates' && (
+          <RateTable salary={salary} />
         )}
 
         {/* Empty State */}
