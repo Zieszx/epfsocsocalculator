@@ -1,71 +1,81 @@
-import { useState, useEffect, useCallback } from 'react'
-import { calculateAll, formatRM } from './utils/calculations'
-import SalaryInput from './components/SalaryInput'
-import DeductionCard from './components/DeductionCard'
-import PCBCard from './components/PCBCard'
-import ZakatToggle from './components/ZakatToggle'
-import CommitmentManager from './components/CommitmentManager'
-import NetSalaryCard from './components/NetSalaryCard'
-import EmployerCard from './components/EmployerCard'
-import SavingsGoal from './components/SavingsGoal'
-import ShareButton from './components/ShareButton'
-import ExportPayslip from './components/ExportPayslip'
-import ThemeToggle from './components/ThemeToggle'
-import TabPanel from './components/TabPanel'
-import YearlySummary from './components/YearlySummary'
-import SalaryComparison from './components/SalaryComparison'
-import BonusCalculator from './components/BonusCalculator'
-import RateTable from './components/RateTable'
+import { useState, useEffect, useCallback } from 'react';
+import { calculateAll, formatRM } from './utils/calculations';
+import SalaryInput from './components/SalaryInput';
+import DeductionCard from './components/DeductionCard';
+import PCBCard from './components/PCBCard';
+import ZakatToggle from './components/ZakatToggle';
+import CommitmentManager from './components/CommitmentManager';
+import NetSalaryCard from './components/NetSalaryCard';
+import EmployerCard from './components/EmployerCard';
+import SavingsGoal from './components/SavingsGoal';
+import ShareButton from './components/ShareButton';
+import ExportPayslip from './components/ExportPayslip';
+import ThemeToggle from './components/ThemeToggle';
+import TabPanel from './components/TabPanel';
+import YearlySummary from './components/YearlySummary';
+import SalaryComparison from './components/SalaryComparison';
+import BonusCalculator from './components/BonusCalculator';
+import RateTable from './components/RateTable';
 
-const STORAGE_KEY = 'mySalaryCalcData'
+const STORAGE_KEY = 'mySalaryCalcData';
 
 function loadFromStorage() {
   try {
-    const saved = sessionStorage.getItem(STORAGE_KEY)
-    if (saved) return JSON.parse(saved)
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
   } catch {
     // ignore
   }
-  return null
+  return null;
 }
 
 function App() {
-  const saved = loadFromStorage()
-  const [salary, setSalary] = useState(saved?.salary || '')
-  const [age, setAge] = useState(saved?.age || 30)
-  const [commitments, setCommitments] = useState(saved?.commitments || [])
-  const [maritalStatus, setMaritalStatus] = useState(saved?.maritalStatus || 'single')
-  const [children, setChildren] = useState(saved?.children || 0)
-  const [zakatEnabled, setZakatEnabled] = useState(saved?.zakatEnabled || false)
-  const [dark, setDark] = useState(false)
-  const [activeTab, setActiveTab] = useState('calculator')
+  const saved = loadFromStorage();
+  const [salary, setSalary] = useState(saved?.salary || '');
+  const [age, setAge] = useState(saved?.age || 30);
+  const [commitments, setCommitments] = useState(saved?.commitments || []);
+  const [maritalStatus, setMaritalStatus] = useState(saved?.maritalStatus || 'single');
+  const [children, setChildren] = useState(saved?.children || 0);
+  const [zakatEnabled, setZakatEnabled] = useState(saved?.zakatEnabled || false);
+  const [pcbEnabled, setPcbEnabled] = useState(saved?.pcbEnabled ?? true);
+  const [dark, setDark] = useState(false);
+  const [activeTab, setActiveTab] = useState('calculator');
 
   useEffect(() => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setDark(prefersDark)
-  }, [])
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setDark(prefersDark);
+  }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-  }, [dark])
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
 
-  const salaryNum = parseFloat(salary) || 0
-  const options = { maritalStatus, children, zakatEnabled }
-  const result = calculateAll(salaryNum, age, commitments, options)
+  const salaryNum = parseFloat(salary) || 0;
+  const options = { maritalStatus, children, zakatEnabled, pcbEnabled };
+  const result = calculateAll(salaryNum, age, commitments, options);
 
   const saveToStorage = useCallback(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        salary, age, commitments, maritalStatus, children, zakatEnabled
-      }))
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          salary,
+          age,
+          commitments,
+          maritalStatus,
+          children,
+          zakatEnabled,
+          pcbEnabled,
+        }),
+      );
     } catch {
       // ignore
     }
-  }, [salary, age, commitments, maritalStatus, children, zakatEnabled])
+  }, [salary, age, commitments, maritalStatus, children, zakatEnabled, pcbEnabled]);
 
   useEffect(() => {
-    saveToStorage()
-  }, [saveToStorage])
+    saveToStorage();
+  }, [saveToStorage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
@@ -75,7 +85,7 @@ function App() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/15 backdrop-blur rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
@@ -132,42 +142,11 @@ function App() {
                 Employee Deductions
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <DeductionCard
-                  title="EPF (KWSP)"
-                  amount={result.epf.employee}
-                  rate={`${result.epf.employeeRate}%`}
-                  color="blue"
-                  description={age < 60 ? 'Standard rate (under 60)' : 'Reduced rate (60+)'}
-                  icon="epf"
-                />
-                <DeductionCard
-                  title="SOCSO (PERKESO)"
-                  amount={result.socso.employee}
-                  rate={`Cat ${result.socso.category}`}
-                  color="green"
-                  description={`Wage bracket table - Ceiling RM6,000`}
-                  icon="socso"
-                />
-                <DeductionCard
-                  title="EIS (SIP)"
-                  amount={result.eis.employee}
-                  rate={`${result.eis.employeeRate || 0}%`}
-                  color="purple"
-                  description={age >= 60 ? 'Exempt (60+)' : 'Wage bracket table - Ceiling RM6,000'}
-                  icon="eis"
-                />
-                <PCBCard
-                  pcb={result.pcb}
-                  maritalStatus={maritalStatus}
-                  setMaritalStatus={setMaritalStatus}
-                  children={children}
-                  setChildren={setChildren}
-                />
-                <ZakatToggle
-                  zakat={result.zakat}
-                  enabled={zakatEnabled}
-                  setEnabled={setZakatEnabled}
-                />
+                <DeductionCard title="EPF (KWSP)" amount={result.epf.employee} rate={`${result.epf.employeeRate}%`} color="blue" description={age < 60 ? 'Standard rate (under 60)' : 'Reduced rate (60+)'} icon="epf" />
+                <DeductionCard title="SOCSO (PERKESO)" amount={result.socso.employee} rate={`Cat ${result.socso.category}`} color="green" description={`Wage bracket table - Ceiling RM6,000`} icon="socso" />
+                <DeductionCard title="EIS (SIP)" amount={result.eis.employee} rate={`${result.eis.employeeRate || 0}%`} color="purple" description={age >= 60 ? 'Exempt (60+)' : 'Wage bracket table - Ceiling RM6,000'} icon="eis" />
+                <PCBCard pcb={result.pcb} maritalStatus={maritalStatus} setMaritalStatus={setMaritalStatus} children={children} setChildren={setChildren} pcbEnabled={pcbEnabled} setPcbEnabled={setPcbEnabled} />
+                <ZakatToggle zakat={result.zakat} enabled={zakatEnabled} setEnabled={setZakatEnabled} />
               </div>
             </section>
 
@@ -192,37 +171,27 @@ function App() {
         )}
 
         {/* ── Yearly Tab ── */}
-        {salaryNum > 0 && activeTab === 'yearly' && (
-          <YearlySummary result={result} />
-        )}
+        {salaryNum > 0 && activeTab === 'yearly' && <YearlySummary result={result} />}
 
         {/* ── Compare Tab ── */}
-        {salaryNum > 0 && activeTab === 'compare' && (
-          <SalaryComparison age={age} commitments={commitments} options={options} />
-        )}
+        {salaryNum > 0 && activeTab === 'compare' && <SalaryComparison age={age} commitments={commitments} options={options} />}
 
         {/* ── Bonus/OT Tab ── */}
-        {salaryNum > 0 && activeTab === 'bonus' && (
-          <BonusCalculator age={age} />
-        )}
+        {salaryNum > 0 && activeTab === 'bonus' && <BonusCalculator age={age} salary={salaryNum} />}
 
         {/* ── Rate Tables Tab ── */}
-        {salaryNum > 0 && activeTab === 'rates' && (
-          <RateTable salary={salary} />
-        )}
+        {salaryNum > 0 && activeTab === 'rates' && <RateTable salary={salary} />}
 
         {/* Empty State */}
         {salaryNum === 0 && (
           <div className="animate-fade-in-up text-center py-12 sm:py-20">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
               <svg className="w-10 h-10 text-blue-500 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-2">Enter Your Salary</h2>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Key in your monthly gross salary above to calculate your EPF, SOCSO, EIS, PCB tax deductions and see your net take-home pay.
-            </p>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">Key in your monthly gross salary above to calculate your EPF, SOCSO, EIS, PCB tax deductions and see your net take-home pay.</p>
           </div>
         )}
 
@@ -231,10 +200,18 @@ function App() {
           <p>Rates: EPF (KWSP), SOCSO (PERKESO), EIS (SIP), PCB/MTD (LHDN) - Malaysia 2024/2025</p>
           <p>SOCSO & EIS: Official wage bracket table | EPF: Percentage based | PCB: Simplified estimate</p>
           <p>For reference only. Verify with official sources or PayrollPanda.</p>
+          <p className="pt-1">
+            Made with ❤︎ by{' '}
+            <span className="font-medium text-slate-500 dark:text-slate-500">
+              <a href="https://zieszx.github.io/portfolio" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                Zieszx
+              </a>
+            </span>
+          </p>
         </footer>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

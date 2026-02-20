@@ -335,12 +335,13 @@ export function calculateBonusDeductions(bonusAmount, age = 30) {
 // ─── Full Summary ──────────────────────────────────────────
 
 export function calculateAll(monthlySalary, age = 30, commitments = [], options = {}) {
-  const { maritalStatus = 'single', children = 0, zakatEnabled = false } = options;
+  const { maritalStatus = 'single', children = 0, zakatEnabled = false, pcbEnabled = true } = options;
 
   const epf = calculateEPF(monthlySalary, age);
   const socso = calculateSOCSO(monthlySalary, age);
   const eis = calculateEIS(monthlySalary, age);
-  const pcb = calculatePCB(monthlySalary, { maritalStatus, children, age });
+  const pcbRaw = calculatePCB(monthlySalary, { maritalStatus, children, age });
+  const pcb = pcbEnabled ? pcbRaw : { ...pcbRaw, monthly: 0 };
   const zakat = calculateZakat(monthlySalary, { epfEmployee: epf.employee, enabled: zakatEnabled });
 
   const totalEmployeeDeductions = epf.employee + socso.employee + eis.employee + pcb.monthly + zakat.monthly;
