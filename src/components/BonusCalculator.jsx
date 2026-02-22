@@ -7,7 +7,14 @@ const OT_MULTIPLIERS = [
   { label: 'Public Holiday OT (3×)', value: 3 },
 ];
 
-function BonusCalculator({ age, salary = 0 }) {
+const TYPE_LABELS = {
+  bonus: 'Annual Bonus',
+  ot: 'Overtime Pay',
+  commission: 'Commission',
+  allowance: 'Allowance',
+};
+
+function BonusCalculator({ age, salary = 0, bonuses = [], setBonuses, resultWithBonus, baseResult }) {
   const [bonusType, setBonusType] = useState('bonus');
   const [bonusAmount, setBonusAmount] = useState('');
 
@@ -30,12 +37,118 @@ function BonusCalculator({ age, salary = 0 }) {
   const amount = isOT ? otAmount : (parseFloat(bonusAmount) || 0);
   const result = calculateBonusDeductions(amount, age);
 
+  const handleAddToCalculator = () => {
+    if (amount <= 0) return;
+
+    const newBonus = {
+      id: Date.now(),
+      type: bonusType,
+      amount: amount,
+      description: isOT
+        ? `${OT_MULTIPLIERS.find(m => m.value === otMultiplier)?.label} - ${otHoursNum} hrs`
+        : `${TYPE_LABELS[bonusType]}`
+    };
+
+    setBonuses([...bonuses, newBonus]);
+
+    // Reset form
+    setBonusAmount('');
+    setOtHours('');
+  };
+
+  const removeBonus = (id) => {
+    setBonuses(bonuses.filter(b => b.id !== id));
+  };
+
+  const totalBonusAmount = bonuses.reduce((sum, b) => sum + b.amount, 0);
+
   return (
     <div className="space-y-4 animate-fade-in-up">
+      {/* Added Bonuses Summary */}
+      {bonuses.length > 0 && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 p-4 sm:p-5 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200">Added to Calculator</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{bonuses.length} bonus{bonuses.length > 1 ? 'es' : ''} included</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setBonuses([])}
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+
+          {/* Combined Monthly Summary */}
+          {resultWithBonus && baseResult && (
+            <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Base Salary</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-200">{formatRM(baseResult.grossSalary)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Bonus/OT Total</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">+{formatRM(totalBonusAmount)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm border-t border-slate-200 dark:border-slate-600 pt-2">
+                <span className="font-semibold text-slate-700 dark:text-slate-200">Total Gross</span>
+                <span className="font-bold text-slate-800 dark:text-slate-100">{formatRM(resultWithBonus.grossSalary)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Total Deductions</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">-{formatRM(resultWithBonus.totalEmployeeDeductions)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm bg-green-100 dark:bg-green-900/30 -mx-3 px-3 py-2 rounded-lg">
+                <span className="font-bold text-slate-700 dark:text-slate-200">Net Take Home</span>
+                <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatRM(resultWithBonus.netSalary)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Bonus List */}
+          <div className="space-y-2">
+            {bonuses.map((bonus) => (
+              <div key={bonus.id} className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-lg px-3 py-2.5 group">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-400 dark:bg-green-500"></span>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{bonus.type}</p>
+                    {bonus.description && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{bonus.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">{formatRM(bonus.amount)}</span>
+                  <button
+                    onClick={() => removeBonus(bonus.id)}
+                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-opacity"
+                    title="Remove"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bonus Calculator Form */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 transition-colors">
         <h2 className="text-base sm:text-lg font-semibold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
           <span className="w-1 h-5 bg-yellow-500 rounded-full"></span>
-          Bonus / Overtime Calculator
+          Add Bonus / Overtime
         </h2>
 
         {/* Type selector */}
@@ -139,9 +252,23 @@ function BonusCalculator({ age, salary = 0 }) {
             </div>
           </div>
         )}
+
+        {/* Add to Calculator Button */}
+        {amount > 0 && (
+          <button
+            onClick={handleAddToCalculator}
+            className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Add to Calculator
+          </button>
+        )}
       </div>
 
-      {amount > 0 && (
+      {/* Deduction Preview */}
+      {amount > 0 && bonuses.length === 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Employee deductions */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 transition-colors">
@@ -203,7 +330,7 @@ function BonusCalculator({ age, salary = 0 }) {
         </div>
       )}
 
-      {amount === 0 && (
+      {amount === 0 && bonuses.length === 0 && (
         <div className="text-center py-12">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
             <svg className="w-8 h-8 text-yellow-500 dark:text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

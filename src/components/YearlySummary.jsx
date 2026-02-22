@@ -1,9 +1,11 @@
 import { formatRM } from '../utils/calculations'
 
-function YearlySummary({ result }) {
+function YearlySummary({ result, baseResult, bonuses = [] }) {
   const { grossSalary, epf, socso, eis, pcb, zakat, totalEmployeeDeductions, totalEmployerContributions, totalCommitments, netSalary } = result
 
   const annual = (val) => val * 12
+  const hasBonus = bonuses.length > 0 && baseResult
+  const totalBonusAmount = bonuses.reduce((sum, b) => sum + b.amount, 0)
 
   const rows = [
     { label: 'Gross Salary', employee: formatRM(annual(grossSalary)), employer: '-', type: 'header' },
@@ -17,6 +19,49 @@ function YearlySummary({ result }) {
 
   return (
     <div className="space-y-5 animate-fade-in-up">
+      {/* Bonus Summary Card */}
+      {hasBonus && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 p-4 sm:p-5 transition-colors">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+              <svg className="w-4 h-4 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-700 dark:text-slate-200">Annual Bonus Summary</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{bonuses.length} bonus{bonuses.length > 1 ? 'es' : ''} included</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Base Gross/Year</p>
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatRM(annual(baseResult.grossSalary))}</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Bonus Total</p>
+              <p className="text-sm font-bold text-green-600 dark:text-green-400">{formatRM(totalBonusAmount)}</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Bonus Deductions</p>
+              <p className="text-sm font-bold text-red-500 dark:text-red-400">{formatRM(result.totalEmployeeDeductions - baseResult.totalEmployeeDeductions)}</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Bonus Net/Year</p>
+              <p className="text-sm font-bold text-green-700 dark:text-green-400">{formatRM(result.netSalary - baseResult.netSalary)}</p>
+            </div>
+          </div>
+
+          <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-slate-600 dark:text-slate-400">Total with Bonus</span>
+              <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatRM(annual(result.netSalary))}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
         <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-base sm:text-lg font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">

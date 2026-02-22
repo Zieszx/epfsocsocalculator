@@ -1,8 +1,11 @@
 import { formatRM } from '../utils/calculations'
 
-function ExportPayslip({ result, salary, age, maritalStatus, children }) {
+function ExportPayslip({ result, salary, age, maritalStatus, children, bonuses = [] }) {
   const handlePrint = () => {
-    const { epf, socso, eis, pcb, zakat, totalEmployeeDeductions, totalEmployerContributions, totalCommitments, netSalary } = result
+    const { epf, socso, eis, pcb, zakat, totalEmployeeDeductions, totalEmployerContributions, totalCommitments, netSalary, grossSalary } = result
+    const hasBonus = bonuses.length > 0
+    const totalBonusAmount = bonuses.reduce((sum, b) => sum + b.amount, 0)
+    const baseSalary = hasBonus ? grossSalary - totalBonusAmount : grossSalary
 
     const html = `
 <!DOCTYPE html>
@@ -26,7 +29,9 @@ function ExportPayslip({ result, salary, age, maritalStatus, children }) {
     .net-negative { color: #dc2626; }
     .deduction { color: #dc2626; }
     .employer { color: #d97706; }
+    .bonus { color: #16a34a; }
     .section-label { font-weight: 600; color: #475569; background: #f8fafc; }
+    .bonus-section { background: #f0fdf4; }
     .footer { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
     @media print { body { padding: 16px; } }
   </style>
@@ -43,12 +48,24 @@ function ExportPayslip({ result, salary, age, maritalStatus, children }) {
     <div>Children: <strong>${children}</strong></div>
   </div>
 
+  ${hasBonus ? `
+  <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #86efac;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+      <span style="font-weight: 600; color: #166534;">Bonus/OT Added (${bonuses.length})</span>
+      <span style="font-weight: 600; color: #16a34a;">+${formatRM(totalBonusAmount)}</span>
+    </div>
+    ${bonuses.map(b => `<div style="font-size: 12px; color: #475569; padding: 2px 0;">• ${b.type}: ${formatRM(b.amount)}${b.description ? ` (${b.description})` : ''}</div>`).join('')}
+  </div>
+  ` : ''}
+
   <table>
     <thead>
       <tr><th>Description</th><th style="text-align:right">Amount (RM)</th></tr>
     </thead>
     <tbody>
-      <tr><td><strong>Gross Monthly Salary</strong></td><td><strong>${formatRM(salary)}</strong></td></tr>
+      ${hasBonus ? `<tr><td><strong>Base Monthly Salary</strong></td><td><strong>${formatRM(baseSalary)}</strong></td></tr>` : `<tr><td><strong>Gross Monthly Salary</strong></td><td><strong>${formatRM(salary)}</strong></td></tr>`}
+      ${hasBonus ? `<tr class="bonus-section"><td><strong>Bonus / Overtime</strong></td><td class="bonus"><strong>+${formatRM(totalBonusAmount)}</strong></td></tr>` : ''}
+      ${hasBonus ? `<tr><td><strong>Total Gross Salary</strong></td><td><strong>${formatRM(salary)}</strong></td></tr>` : ''}
       <tr><td class="section-label" colspan="2">Employee Deductions</td></tr>
       <tr><td>&nbsp;&nbsp;EPF (${epf.employeeRate}%)</td><td class="deduction">- ${formatRM(epf.employee)}</td></tr>
       <tr><td>&nbsp;&nbsp;SOCSO (${socso.employeeRate}%)</td><td class="deduction">- ${formatRM(socso.employee)}</td></tr>

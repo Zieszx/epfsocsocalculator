@@ -40,6 +40,7 @@ function App() {
   const [pcbEnabled, setPcbEnabled] = useState(saved?.pcbEnabled ?? true);
   const [dark, setDark] = useState(false);
   const [activeTab, setActiveTab] = useState('calculator');
+  const [bonuses, setBonuses] = useState(saved?.bonuses || []);
 
   useEffect(() => {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -52,8 +53,11 @@ function App() {
 
   const salaryNum = parseFloat(salary) || 0;
   const ageNum = parseInt(age) || 30;
+  const totalBonusAmount = bonuses.reduce((sum, b) => sum + b.amount, 0);
+  const totalGrossWithBonus = salaryNum + totalBonusAmount;
   const options = { maritalStatus, children: parseInt(children) || 0, zakatEnabled, pcbEnabled };
   const result = calculateAll(salaryNum, ageNum, commitments, options);
+  const resultWithBonus = calculateAll(totalGrossWithBonus, ageNum, commitments, options);
 
   const saveToStorage = useCallback(() => {
     try {
@@ -67,12 +71,13 @@ function App() {
           children: parseInt(children) || 0,
           zakatEnabled,
           pcbEnabled,
+          bonuses,
         }),
       );
     } catch {
       // ignore
     }
-  }, [salary, age, commitments, maritalStatus, children, zakatEnabled, pcbEnabled]);
+  }, [salary, age, commitments, maritalStatus, children, zakatEnabled, pcbEnabled, bonuses]);
 
   useEffect(() => {
     saveToStorage();
@@ -114,16 +119,46 @@ function App() {
         {/* ── Calculator Tab ── */}
         {salaryNum > 0 && activeTab === 'calculator' && (
           <div className="space-y-5 sm:space-y-6 animate-fade-in-up">
+            {/* Bonus Summary Bar (if bonuses exist) */}
+            {bonuses.length > 0 && (
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-xl shadow-sm border border-yellow-200 dark:border-yellow-800/50 p-4 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <h3 className="font-semibold text-slate-700 dark:text-slate-200">Bonuses Added ({bonuses.length})</h3>
+                  </div>
+                  <button
+                    onClick={() => setBonuses([])}
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {bonuses.map((bonus) => (
+                    <span key={bonus.id} className="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 rounded-lg text-sm border border-yellow-300 dark:border-yellow-700">
+                      <span className="text-slate-600 dark:text-slate-300">{bonus.type}</span>
+                      <span className="font-semibold text-yellow-700 dark:text-yellow-400">{formatRM(bonus.amount)}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Summary Bar */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 transition-colors">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center">
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">Gross</p>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">
+                    {bonuses.length > 0 ? 'Base Gross' : 'Gross'}
+                  </p>
                   <p className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">{formatRM(salaryNum)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">Deductions</p>
-                  <p className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400">{formatRM(result.totalEmployeeDeductions)}</p>
+                  <p className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400">{formatRM((bonuses.length > 0 ? resultWithBonus : result).totalEmployeeDeductions)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">Commitments</p>
@@ -131,9 +166,29 @@ function App() {
                 </div>
                 <div className="text-center">
                   <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">Net Pay</p>
-                  <p className={`text-base sm:text-lg font-bold ${result.netSalary >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatRM(result.netSalary)}</p>
+                  <p className={`text-base sm:text-lg font-bold ${(bonuses.length > 0 ? resultWithBonus : result).netSalary >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {formatRM((bonuses.length > 0 ? resultWithBonus : result).netSalary)}
+                  </p>
                 </div>
               </div>
+              {bonuses.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">With Bonus</p>
+                      <p className="text-sm font-bold text-yellow-700 dark:text-yellow-400">{formatRM(resultWithBonus.netSalary)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Extra Deductions</p>
+                      <p className="text-sm font-bold text-red-500 dark:text-red-400">{formatRM(resultWithBonus.totalEmployeeDeductions - result.totalEmployeeDeductions)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Bonus Net</p>
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400">{formatRM(resultWithBonus.netSalary - result.netSalary)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Statutory Deductions */}
@@ -155,30 +210,30 @@ function App() {
             <CommitmentManager commitments={commitments} setCommitments={setCommitments} />
 
             {/* Net Salary */}
-            <NetSalaryCard result={result} />
+            <NetSalaryCard result={bonuses.length > 0 ? resultWithBonus : result} showBonus={bonuses.length > 0} baseResult={result} bonusResult={resultWithBonus} bonuses={bonuses} />
 
             {/* Savings Goal */}
-            <SavingsGoal disposableIncome={result.netSalary} />
+            <SavingsGoal disposableIncome={(bonuses.length > 0 ? resultWithBonus : result).netSalary} />
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
-              <ShareButton result={result} salary={salaryNum} />
-              <ExportPayslip result={result} salary={salaryNum} age={ageNum} maritalStatus={maritalStatus} children={parseInt(children) || 0} />
+              <ShareButton result={bonuses.length > 0 ? resultWithBonus : result} salary={totalGrossWithBonus} />
+              <ExportPayslip result={bonuses.length > 0 ? resultWithBonus : result} salary={totalGrossWithBonus} age={ageNum} maritalStatus={maritalStatus} children={parseInt(children) || 0} bonuses={bonuses} />
             </div>
 
             {/* Employer Contributions */}
-            <EmployerCard result={result} salary={salaryNum} />
+            <EmployerCard result={bonuses.length > 0 ? resultWithBonus : result} salary={totalGrossWithBonus} />
           </div>
         )}
 
         {/* ── Yearly Tab ── */}
-        {salaryNum > 0 && activeTab === 'yearly' && <YearlySummary result={result} />}
+        {salaryNum > 0 && activeTab === 'yearly' && <YearlySummary result={bonuses.length > 0 ? resultWithBonus : result} baseResult={result} bonuses={bonuses} />}
 
         {/* ── Compare Tab ── */}
         {salaryNum > 0 && activeTab === 'compare' && <SalaryComparison age={ageNum} commitments={commitments} options={options} />}
 
         {/* ── Bonus/OT Tab ── */}
-        {salaryNum > 0 && activeTab === 'bonus' && <BonusCalculator age={ageNum} salary={salaryNum} />}
+        {salaryNum > 0 && activeTab === 'bonus' && <BonusCalculator age={ageNum} salary={salaryNum} bonuses={bonuses} setBonuses={setBonuses} resultWithBonus={resultWithBonus} baseResult={result} />}
 
         {/* ── Rate Tables Tab ── */}
         {salaryNum > 0 && activeTab === 'rates' && <RateTable salary={salary} />}
