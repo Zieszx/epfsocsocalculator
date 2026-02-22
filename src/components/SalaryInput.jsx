@@ -27,13 +27,21 @@ function SalaryInput({ salary, setSalary, age, setAge }) {
           <input
             type="number"
             value={age}
-            onChange={(e) => setAge(parseInt(e.target.value) || 0)}
+            onChange={(e) => {
+              const value = e.target.value
+              setAge(value === '' ? '' : value)
+            }}
+            onBlur={(e) => {
+              const value = parseInt(e.target.value)
+              setAge(isNaN(value) || value < 18 ? 30 : value > 75 ? 75 : value)
+            }}
+            placeholder="e.g. 30"
             min="18"
             max="75"
-            className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-colors"
+            className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
           />
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {age < 60 ? 'Standard EPF 11% + SOCSO Cat 1 + EIS' : 'Reduced EPF 5.5% + SOCSO Cat 2, No EIS'}
+            {age && age < 60 ? 'Standard EPF 11% + SOCSO Cat 1 + EIS' : age >= 60 ? 'Reduced EPF 5.5% + SOCSO Cat 2, No EIS' : 'Enter your age for accurate calculations'}
           </p>
         </div>
       </div>

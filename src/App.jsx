@@ -32,10 +32,10 @@ function loadFromStorage() {
 function App() {
   const saved = loadFromStorage();
   const [salary, setSalary] = useState(saved?.salary || '');
-  const [age, setAge] = useState(saved?.age || 30);
+  const [age, setAge] = useState(saved?.age?.toString() || '30');
   const [commitments, setCommitments] = useState(saved?.commitments || []);
   const [maritalStatus, setMaritalStatus] = useState(saved?.maritalStatus || 'single');
-  const [children, setChildren] = useState(saved?.children || 0);
+  const [children, setChildren] = useState(saved?.children?.toString() || '0');
   const [zakatEnabled, setZakatEnabled] = useState(saved?.zakatEnabled || false);
   const [pcbEnabled, setPcbEnabled] = useState(saved?.pcbEnabled ?? true);
   const [dark, setDark] = useState(false);
@@ -51,8 +51,9 @@ function App() {
   }, [dark]);
 
   const salaryNum = parseFloat(salary) || 0;
-  const options = { maritalStatus, children, zakatEnabled, pcbEnabled };
-  const result = calculateAll(salaryNum, age, commitments, options);
+  const ageNum = parseInt(age) || 30;
+  const options = { maritalStatus, children: parseInt(children) || 0, zakatEnabled, pcbEnabled };
+  const result = calculateAll(salaryNum, ageNum, commitments, options);
 
   const saveToStorage = useCallback(() => {
     try {
@@ -60,10 +61,10 @@ function App() {
         STORAGE_KEY,
         JSON.stringify({
           salary,
-          age,
+          age: parseInt(age) || 30,
           commitments,
           maritalStatus,
-          children,
+          children: parseInt(children) || 0,
           zakatEnabled,
           pcbEnabled,
         }),
@@ -162,7 +163,7 @@ function App() {
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
               <ShareButton result={result} salary={salaryNum} />
-              <ExportPayslip result={result} salary={salaryNum} age={age} maritalStatus={maritalStatus} children={children} />
+              <ExportPayslip result={result} salary={salaryNum} age={ageNum} maritalStatus={maritalStatus} children={parseInt(children) || 0} />
             </div>
 
             {/* Employer Contributions */}
@@ -174,10 +175,10 @@ function App() {
         {salaryNum > 0 && activeTab === 'yearly' && <YearlySummary result={result} />}
 
         {/* ── Compare Tab ── */}
-        {salaryNum > 0 && activeTab === 'compare' && <SalaryComparison age={age} commitments={commitments} options={options} />}
+        {salaryNum > 0 && activeTab === 'compare' && <SalaryComparison age={ageNum} commitments={commitments} options={options} />}
 
         {/* ── Bonus/OT Tab ── */}
-        {salaryNum > 0 && activeTab === 'bonus' && <BonusCalculator age={age} salary={salaryNum} />}
+        {salaryNum > 0 && activeTab === 'bonus' && <BonusCalculator age={ageNum} salary={salaryNum} />}
 
         {/* ── Rate Tables Tab ── */}
         {salaryNum > 0 && activeTab === 'rates' && <RateTable salary={salary} />}

@@ -1,6 +1,15 @@
 import { formatRM } from '../utils/calculations';
 
 function PCBCard({ pcb, maritalStatus, setMaritalStatus, children, setChildren, pcbEnabled, setPcbEnabled }) {
+  const handleChildrenChange = (e) => {
+    const value = e.target.value
+    setChildren(value === '' ? '' : value)
+  }
+
+  const handleChildrenBlur = () => {
+    const num = parseInt(children)
+    setChildren(isNaN(num) || num < 0 ? '0' : num > 20 ? '20' : num.toString())
+  }
   return (
     <div className={`rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
       pcbEnabled
@@ -24,13 +33,20 @@ function PCBCard({ pcb, maritalStatus, setMaritalStatus, children, setChildren, 
         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300 mr-1">LHDN</span>
         <button
           onClick={() => setPcbEnabled(!pcbEnabled)}
-          className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 ${
+          type="button"
+          role="switch"
+          aria-checked={pcbEnabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 cursor-pointer ${
             pcbEnabled ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-600'
           }`}
         >
-          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-            pcbEnabled ? 'translate-x-5' : 'translate-x-0.5'
-          }`}></span>
+          <span className="sr-only">Toggle PCB</span>
+          <span
+            aria-hidden="true"
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
+              pcbEnabled ? 'translate-x-6' : 'translate-x-0.5'
+            }`}
+          />
         </button>
       </div>
 
@@ -56,10 +72,12 @@ function PCBCard({ pcb, maritalStatus, setMaritalStatus, children, setChildren, 
             <input
               type="number"
               value={children}
-              onChange={(e) => setChildren(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={handleChildrenChange}
+              onBlur={handleChildrenBlur}
+              placeholder="0"
               min="0"
               max="20"
-              className="flex-1 text-xs px-2 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 text-xs px-2 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">

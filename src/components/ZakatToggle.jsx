@@ -18,13 +18,20 @@ function ZakatToggle({ zakat, enabled, setEnabled }) {
         <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm flex-1">Zakat</h3>
         <button
           onClick={() => setEnabled(!enabled)}
-          className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 cursor-pointer ${
             enabled ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-600'
           }`}
         >
-          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-            enabled ? 'translate-x-5' : 'translate-x-0.5'
-          }`}></span>
+          <span className="sr-only">Toggle Zakat</span>
+          <span
+            aria-hidden="true"
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
+              enabled ? 'translate-x-6' : 'translate-x-0.5'
+            }`}
+          />
         </button>
       </div>
 
